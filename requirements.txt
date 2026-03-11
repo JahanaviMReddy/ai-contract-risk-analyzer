@@ -1,0 +1,6 @@
+flask
+flask-login
+spacy
+pdfplumber
+gunicorn
+sqlite3

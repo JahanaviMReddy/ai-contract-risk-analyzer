@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard | Contract Risk Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page-dashboard">
+    <header class="dashboard-header">
+        <div class="dashboard-brand">Contract Risk Analyzer</div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('upload') }}" class="nav-upload">Upload Contract</a>
+            <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="card card-welcome">
+            <h1>Welcome, {{ current_user.username }}</h1>
+            <p>Upload contracts to analyze risk. Your previous analyses are listed below.</p>
+            <a href="{{ url_for('upload') }}" class="btn-upload">Upload Contract</a>
+        </section>
+
+        <section class="card card-contracts">
+            <h2>Previously Analyzed Contracts</h2>
+            <form method="get" class="filter-form" style="margin-bottom: 1rem; display: flex; gap: 0.75rem; align-items: center;">
+                <label for="type">Filter by contract type:</label>
+                <select name="type" id="type" onchange="this.form.submit()" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.45rem 0.65rem; background: #fff; color: #0f172a;">
+                    <option value="all" {% if selected_type == 'all' %}selected{% endif %}>All</option>
+                    {% for t in contract_types %}
+                    <option value="{{ t }}" {% if selected_type == t %}selected{% endif %}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+                <a href="{{ url_for('dashboard') }}" style="color: #2563eb;">Reset</a>
+            </form>
+            {% if contracts %}
+                <div class="table-wrap">
+                    <table class="contracts-table">
+                        <thead>
+                            <tr>
+                                <th>Filename</th>
+                                <th>Contract Type</th>
+                                <th>Risk Score</th>
+                                <th>Risk Level</th>
+                                <th>Upload Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in contracts %}
+                            {% set c_level = 'Low' if c.risk_score < 30 else 'Medium' if c.risk_score < 60 else 'High' %}
+                            <tr>
+                                <td class="cell-filename">{{ c.filename }}</td>
+                                <td class="cell-contract-type">{{ c.contract_type|default('General Contract') }}</td>
+                                <td>
+                                    <span class="risk-badge risk-{{ c_level|lower }}">
+                                        {{ c.risk_score }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="risk-status risk-status-{{ c_level|lower }}">{{ c_level }}</span>
+                                </td>
+                                <td class="cell-date">{{ c.upload_date }}</td>
+                                <td>
+                                    <a href="{{ url_for('results', contract_id=c.id) }}" class="link-view">View</a>
+                                    <form method="post" action="{{ url_for('delete_contract', contract_id=c.id) }}" style="display:inline; margin-left:0.5rem;">
+                                        <button type="submit" class="link-view delete-btn" onclick="return confirm('Delete this analysis and PDF file?');">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="empty-state">No contracts yet. Click “Upload Contract” to analyze your first document.</p>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

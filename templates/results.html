@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Analysis Results | Contract Risk Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page-results">
+    <header class="dashboard-header">
+        <div class="dashboard-brand">Contract Risk Analyzer</div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('upload') }}" class="nav-upload">Upload Contract</a>
+            <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-main results-main">
+        <section class="card card-results-hero">
+            <h1>Analysis Results</h1>
+            <div class="results-meta">
+                <div class="meta-filename">
+                    <span class="meta-label">File</span>
+                    <span class="meta-value">{{ analysis.filename }}</span>
+                </div>
+                <div class="meta-lang">
+                    <span class="meta-label">Detected Language</span>
+                    <span class="meta-value">{{ analysis.analysis_language|default('en')|upper }}</span>
+                </div>
+                <div class="meta-lang">
+                    <span class="meta-label">Recommendation Language</span>
+                    <span class="meta-value">{{ analysis.recommendation_language|default('en')|upper }}</span>
+                </div>
+                <div class="meta-lang">
+                    <span class="meta-label">Contract Type</span>
+                    <span class="meta-value">{{ analysis.contract_type|default('General Contract') }}</span>
+                </div>
+                {% set risk_level = 'Low' if analysis.risk_score < 30 else 'Medium' if analysis.risk_score < 60 else 'High' %}
+                <div class="risk-score-block">
+                    <span class="meta-label">Risk Score</span>
+                    <span class="risk-score-value risk-{{ risk_level|lower }}">
+                        {{ analysis.risk_score }}
+                    </span>
+                    <span class="risk-score-label">/ 100</span>
+                    <span class="risk-status risk-status-{{ risk_level|lower }}">{{ risk_level }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="card card-results-section">
+            <h2>Summary</h2>
+            <p>{{ analysis.summary }}</p>
+        </section>
+
+        <section class="card card-results-section">
+            <h2>Detected Clauses</h2>
+            <p class="clauses-intro">Each sentence is classified with an explanation.</p>
+            {% if analysis.clause_classification and analysis.clause_classification|length > 0 %}
+            <div class="table-wrap">
+        <table class="clause-table">
+            <thead>
+            <tr>
+                <th>Sentence</th>
+                <th>Clause Type</th>
+                <th>Risk</th>
+                <th>AI Explanation</th>
+                <th>Suggested Wording</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for clause in analysis.clause_classification %}
+            <tr class="{{ 'row-risky' if clause.risk_flag else '' }}">
+                <td class="clause-td-sentence">{{ clause.sentence }}</td>
+                <td class="clause-td-type">{{ clause.clause_type }}</td>
+                <td>
+                    {% if clause.risk_flag %}
+                    <span class="risk-flag">Risky</span>
+                    {% else %}
+                    <span class="risk-flag risk-flag-safe">Normal</span>
+                    {% endif %}
+                </td>
+                <td class="clause-td-expl">{{ clause.explanation }}</td>
+                <td class="clause-td-expl">{{ clause.suggestion }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+            </div>
+            {% else %}
+                <p class="clauses-intro">No clauses could be identified. Please ensure PDF text is selectable (not scanned images), and try again.</p>
+            {% endif %}
+        </section>
+
+        <section class="card card-results-section">
+            <h2>Key Risk Factors</h2>
+        {% set factors = analysis.risk_factors if analysis.risk_factors is iterable and not analysis.risk_factors is string else (analysis.risk_factors.split('\n') if analysis.risk_factors else []) %}
+        {% if factors %}
+            <ul>
+                {% for f in factors %}
+                    {% if f %}
+                        <li>{{ f }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No significant risk factors identified by the current heuristics.</p>
+        {% endif %}
+        </section>
+
+        <section class="card card-results-section">
+            <h2>Recommendations</h2>
+        {% set recs = analysis.recommendations if analysis.recommendations is iterable and not analysis.recommendations is string else (analysis.recommendations.split('\n') if analysis.recommendations else []) %}
+        {% if recs %}
+            <ul>
+                {% for r in recs %}
+                    {% if r %}
+                        <li>{{ r }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+        </section>
+
+        <div class="results-actions">
+            <a class="primary-btn" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+            <a class="primary-btn" href="{{ url_for('download_report', contract_id=analysis.id) }}">Download TXT Report</a>
+            <a class="primary-btn" href="{{ url_for('download_report_pdf', contract_id=analysis.id) }}">Download PDF Report</a>
+        </div>
+    </main>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+

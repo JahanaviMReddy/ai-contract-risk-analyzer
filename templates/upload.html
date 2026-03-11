@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Contract | Contract Risk Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="dashboard-header">
+        <div class="dashboard-brand">Contract Risk Analyzer</div>
+        <nav class="dashboard-nav">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('upload') }}" class="nav-upload">Upload Contract</a>
+            <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="upload-section card">
+            <h1>Upload Contract PDF</h1>
+            <p class="upload-hint">Select a PDF file. Only PDF files are accepted.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="post" enctype="multipart/form-data" class="upload-form">
+                <label for="contract">Contract PDF</label>
+                <input type="file" id="contract" name="contract" accept="application/pdf,.pdf" required>
+
+                <label for="recommendation_language">Recommendation Language</label>
+                <select id="recommendation_language" name="recommendation_language" required>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="hi">Hindi</option>
+                    <option value="kn">Kannada</option>
+                </select>
+
+                <button type="submit">Analyze Contract</button>
+            </form>
+
+            <p class="disclaimer">
+                This tool provides automated risk indicators only and does not constitute legal advice.
+                Always consult qualified counsel before making binding decisions.
+            </p>
+            <a href="{{ url_for('dashboard') }}" class="link-back">← Back to Dashboard</a>
+        </section>
+    </main>
+</body>
+</html>
